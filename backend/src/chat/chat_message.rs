@@ -1,8 +1,11 @@
 
-use actix::prelude::{Message, Recipient};
+use std::collections::HashMap;
+
+use actix::{prelude::{Message, Recipient}, Addr};
+use serde::{Serialize, Serializer};
 use uuid::Uuid;
 
-use super::text_chat::ChatContentType;
+use super::{text_chat::ChatContentType, chat_connection::ChatConnection, chat_server::ConnectionInfo};
 
 //WsConn responds to this to pipe it through to the actual client
 #[derive(Message, Debug)]
@@ -14,6 +17,8 @@ pub struct ChatMessage(pub String);
 pub struct Connect {
     pub addr: Recipient<ClientActorMessage>,
     pub id: Uuid,
+    pub name: String,
+    pub g_addr: Addr<ChatConnection>
 }
 
 //WsConn sends this to a lobby to say "take me out please"
@@ -32,4 +37,12 @@ pub struct ClientActorMessage {
     pub recipient: Uuid,
     pub messageType: ChatContentType,
 }
+
+
+#[derive(Message, Clone, Debug)]
+#[rtype(result = "()")]
+pub struct OnlineUsers {
+    pub users: HashMap<Uuid, ConnectionInfo>
+}
+
 

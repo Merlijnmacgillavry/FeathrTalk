@@ -5,18 +5,21 @@ use uuid::Uuid;
 use crate::chat::chat_message::{ClientActorMessage, Connect};
 use crate::chat::chat_server::ChatServer;
 use crate::chat::text_chat::ChatContent;
+use crate::utils::client_serializer::ClientUser;
+
 use actix_web_actors::ws::Message::Text;
 
-use super::chat_message::{ChatMessage, Disconnect};
+use super::chat_message::{ChatMessage, Disconnect, OnlineUsers};
 
 #[derive(Debug)]
 pub struct ChatConnection {
     id: Uuid,
-    server_addr: Addr<ChatServer>
+    server_addr: Addr<ChatServer>,
+    name: String
 }
 impl ChatConnection {
-    pub fn new(id: Uuid, server_addr: Addr<ChatServer>) -> ChatConnection{
-        ChatConnection { id, server_addr }
+    pub fn new(id: Uuid, server_addr: Addr<ChatServer>, name: String) -> ChatConnection{
+        ChatConnection { id, server_addr,name }
     }
 }
 
@@ -26,17 +29,29 @@ impl Actor for ChatConnection {
     fn started(&mut self, ctx: &mut Self::Context){
         println!("Started chat connection:\n\r{:?}", self);
         let addr = ctx.address();
+        let addr2 = addr.clone();
         // println!("Address is: {:?}", addr);
         self.server_addr
             .do_send(Connect{
-                id: self.id, 
-                addr: addr.recipient() 
+                id: self.id.clone(),
+                name: self.name.clone(), 
+                addr: addr.recipient() ,
+                g_addr: addr2
             });
         
     }
-    fn stopping(&mut self, _: &mut Self::Context) -> Running {
+    fn stopping(&mut self, ctx: &mut Self::Context) -> Running {
         println!("Stopping chat connection:\n\r{:?}", self);
         self.server_addr.do_send(Disconnect {id: self.id});
+        let addr = ctx.address();
+        let addr2 = addr.clone();
+        self.server_addr
+            .do_send(Connect{
+                id: self.id.clone(),
+                name: self.name.clone(), 
+                addr: addr.recipient() , 
+                g_addr: addr2
+            });
         Running::Stop
     }
 }
@@ -84,12 +99,20 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ChatConnection {
     }
 }
 
-impl Handler<ChatMessage> for ChatConnection {
+impl Handler<OnlineUsers> for ChatConnection {
     type Result = ();
-    
-    fn handle(&mut self, msg: ChatMessage, ctx: &mut Self::Context) {
+
+    fn handle(&mut self, msg: OnlineUsers, ctx: &mut Self::Context) {
         println!("Writing message:\n\r{:?}", msg);
-        ctx.text(msg.0);
+        let mut user_list = Vec::<ClientUser>::new();
+        for (uuid, info) in msg.users{
+            let user = ClientUser{
+                uuid: uuid.to_string(),
+                name: info.name
+            };
+            user_list.push(user);
+        }
+        ctx.text(serde_json::to_string(&user_list).unwrap())
         
     }
 }
@@ -100,3 +123,5 @@ impl Handler<ClientActorMessage> for ChatConnection {
         ctx.text(format!("{}: {}", msg.sender, msg.msg))
     }
 }
+
+

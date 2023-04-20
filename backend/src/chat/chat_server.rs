@@ -2,15 +2,21 @@ use std::collections::{HashMap, HashSet};
 use actix_web::client::Client;
 use uuid::Uuid;
 use actix::{prelude::{Actor, Context, Handler, Recipient}, Addr};
-use crate::chat::chat_message::{ChatMessage};
+use crate::chat::chat_message::{ChatMessage, OnlineUsers};
 
 use super::{chat_message::{ClientActorMessage, Connect, Disconnect}, chat_connection::ChatConnection};
 type Socket = Recipient<ClientActorMessage>;
+// type Socket = Addr<ChatConnection>;
 
 
 #[derive(Debug)]
 pub struct ChatServer {
-    clients: HashMap<Uuid, Socket>
+    clients: HashMap<Uuid, ConnectionInfo>
+}
+
+#[derive(Debug, Clone)]
+pub struct ConnectionInfo {
+    pub socket: Socket, pub name: String, pub addr: Addr<ChatConnection>
 }
 
 impl Default for ChatServer {
@@ -29,18 +35,21 @@ impl ChatServer {
         let success = self.clients
             .get(&message.recipient)
             .unwrap()
+            .socket
             .do_send(message);
         match success {
             Ok(_) => {
                 println!("Succesfully send message!");
                 self.clients.get(&message_copy.sender)
                 .unwrap()
+                .socket
                 .do_send(message_copy).unwrap();
             },
             Err(_) => {
                 println!("Failed to send message!");
                 self.clients.get(&message_copy.sender)
                 .unwrap()
+                .socket
                 .do_send(message_copy).unwrap();
             }
         }
@@ -55,13 +64,25 @@ impl Handler<Connect> for ChatServer {
     type Result = ();
 
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>)  {
-        println!("Adding user: {:?} to connected users!", msg.id);
+        println!("Adding user: {:?}, with id: {:?} to connected users!", msg.name, msg.id);
         // let res = self.clients
         //     .insert(msg.id);
+        let san = ConnectionInfo{
+            name: msg.name,
+            socket: msg.addr.clone(), 
+            addr: msg.g_addr.clone()
+        };
         self.clients.insert(
             msg.id, 
-            msg.addr
+            san
         );
+        let mut users = Vec::<&ConnectionInfo>::new();
+        for (key, info) in &self.clients{
+            info.addr.do_send(OnlineUsers{
+                users: self.clients.clone()
+            })
+        }
+
     }
 }
 impl Handler<Disconnect> for ChatServer {
