@@ -4,7 +4,7 @@ use actix::Actor;
 use actix_web::{App, HttpServer};
 mod utils;
 use chat::{
-    chat_message::ChatMessage, 
+    messages::ChatMessage, 
     chat_server::ChatServer,
 };
 use routes::start_connection::connect_user as start_connection_route;

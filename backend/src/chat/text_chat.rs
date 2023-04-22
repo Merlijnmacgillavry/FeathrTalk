@@ -19,7 +19,7 @@ impl ChatContent{
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub enum ChatContentType {
     Private,
     Group,

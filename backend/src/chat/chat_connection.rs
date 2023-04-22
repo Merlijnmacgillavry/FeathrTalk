@@ -2,14 +2,14 @@ use actix::{Actor, Addr, Running, StreamHandler, WrapFuture, ActorFuture, Contex
 use actix::{AsyncContext, Handler};
 use actix_web_actors::ws;
 use uuid::Uuid;
-use crate::chat::chat_message::{ClientActorMessage, Connect};
+use crate::chat::messages::{ClientActorMessage, Connect};
 use crate::chat::chat_server::ChatServer;
 use crate::chat::text_chat::ChatContent;
 use crate::utils::client_serializer::ClientUser;
 
 use actix_web_actors::ws::Message::Text;
 
-use super::chat_message::{ChatMessage, Disconnect, OnlineUsers};
+use super::messages::{ChatMessage, Disconnect, OnlineUsers, ConnectMessage};
 
 #[derive(Debug)]
 pub struct ChatConnection {
@@ -112,7 +112,7 @@ impl Handler<OnlineUsers> for ChatConnection {
             };
             user_list.push(user);
         }
-        ctx.text(serde_json::to_string(&user_list).unwrap())
+        ctx.text("ONLINEUSERS:".to_owned()+&serde_json::to_string(&user_list).unwrap())
         
     }
 }
@@ -120,7 +120,14 @@ impl Handler<ClientActorMessage> for ChatConnection {
     type Result =();
 
     fn handle(&mut self, msg: ClientActorMessage, ctx: &mut Self::Context){
-        ctx.text(format!("{}: {}", msg.sender, msg.msg))
+        ctx.text("CHATMESSAGE:".to_owned()+&serde_json::to_string(&msg).unwrap())
+    }
+}
+impl Handler<ConnectMessage> for ChatConnection {
+    type Result =();
+
+    fn handle(&mut self, msg: ConnectMessage, ctx: &mut Self::Context){
+        ctx.text("CONNECT:".to_owned()+&serde_json::to_string(&msg).unwrap())
     }
 }
 

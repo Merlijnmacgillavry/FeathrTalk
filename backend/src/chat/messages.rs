@@ -29,7 +29,7 @@ pub struct Disconnect {
 }
 
 //client sends this to the lobby for the lobby to echo out.
-#[derive(Message, Clone)]
+#[derive(Message, Clone, Serialize)]
 #[rtype(result = "()")]
 pub struct ClientActorMessage {
     pub sender: Uuid,
@@ -45,4 +45,10 @@ pub struct OnlineUsers {
     pub users: HashMap<Uuid, ConnectionInfo>
 }
 
+#[derive(Message, Clone, Serialize)]
+#[rtype(result = "()")]
+pub struct ConnectMessage {
+    pub uuid: Uuid,
+    pub name: String,
+}
 

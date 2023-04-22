@@ -2,9 +2,10 @@ use std::collections::{HashMap, HashSet};
 use actix_web::client::Client;
 use uuid::Uuid;
 use actix::{prelude::{Actor, Context, Handler, Recipient}, Addr};
-use crate::chat::chat_message::{ChatMessage, OnlineUsers};
 
-use super::{chat_message::{ClientActorMessage, Connect, Disconnect}, chat_connection::ChatConnection};
+use crate::chat::messages::{OnlineUsers, ConnectMessage};
+
+use super::{messages::{ClientActorMessage, Connect, Disconnect}, chat_connection::ChatConnection};
 type Socket = Recipient<ClientActorMessage>;
 // type Socket = Addr<ChatConnection>;
 
@@ -68,7 +69,7 @@ impl Handler<Connect> for ChatServer {
         // let res = self.clients
         //     .insert(msg.id);
         let san = ConnectionInfo{
-            name: msg.name,
+            name: msg.name.clone(),
             socket: msg.addr.clone(), 
             addr: msg.g_addr.clone()
         };
@@ -76,6 +77,10 @@ impl Handler<Connect> for ChatServer {
             msg.id, 
             san
         );
+        msg.g_addr.do_send(ConnectMessage{
+            uuid: msg.id,
+            name: msg.name
+        });
         let mut users = Vec::<&ConnectionInfo>::new();
         for (key, info) in &self.clients{
             info.addr.do_send(OnlineUsers{
