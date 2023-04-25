@@ -1,6 +1,6 @@
 use crate::chat::{chat_server::ChatServer, chat_connection::ChatConnection};
 use actix::Addr;
-use actix_web::{get, web::Data, web::Path, web::Payload, Error, HttpResponse, HttpRequest, http::header::ContentType};
+use actix_web::{get, web::Data, web::Path, web::Payload, Error, HttpResponse, HttpRequest, http::{header::ContentType, StatusCode}};
 use actix_web_actors::ws;
 use uuid::Uuid;
 
@@ -10,7 +10,7 @@ pub async fn health_check(
     _stream: Payload,
 ) -> HttpResponse {
     println!("health_check");
-    HttpResponse::Ok()
+    HttpResponse::Ok().status(StatusCode::OK)
         .body("Server is alive and reachable!")
 }
 
