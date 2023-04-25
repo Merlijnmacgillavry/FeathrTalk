@@ -1,10 +1,16 @@
 mod chat;
 mod routes;
+mod models;
+mod repository;
 use actix::Actor;
-use actix_web::web::Payload;
+use actix_web::web::{Payload, Data};
 use actix_web::{HttpResponse, web, HttpRequest};
 use actix_web::{App, HttpServer};
 mod utils;
+
+use routes::user_api::{create_user};
+use repository::mongodb_repo::MongoRepo;
+
 use chat::{
     messages::ChatMessage, 
     chat_server::ChatServer,
@@ -21,7 +27,8 @@ async fn default_route(_req: HttpRequest,
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    
+    let db = MongoRepo::init().await;
+    let db_data = Data::new(db);
     let chat_server = ChatServer::default().start(); //create and spin up a lobby
     println!("{:?}", chat_server);
     HttpServer::new(move || {
@@ -30,6 +37,8 @@ async fn main() -> std::io::Result<()> {
             .service(health_check_route)
             .default_service(web::route().to(default_route))
             // .service(start_user_connection)
+            .service(create_user)
+            .app_data(db_data.clone())
             .data(chat_server.clone()) //register the lobby
     })
     .bind("0.0.0.0:8080")?
