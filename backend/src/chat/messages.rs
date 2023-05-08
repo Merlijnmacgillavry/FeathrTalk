@@ -2,6 +2,7 @@
 use std::collections::HashMap;
 
 use actix::{prelude::{Message, Recipient}, Addr};
+use mongodb::bson::oid::ObjectId;
 use serde::{Serialize, Serializer};
 use uuid::Uuid;
 
@@ -16,7 +17,7 @@ pub struct ChatMessage(pub String);
 #[rtype(result = "()")]
 pub struct Connect {
     pub addr: Recipient<ClientActorMessage>,
-    pub id: Uuid,
+    pub id: String,
     pub name: String,
     pub g_addr: Addr<ChatConnection>
 }
@@ -25,30 +26,28 @@ pub struct Connect {
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct Disconnect {
-    pub id: Uuid,
+    pub id: String,
 }
 
 //client sends this to the lobby for the lobby to echo out.
 #[derive(Message, Clone, Serialize)]
 #[rtype(result = "()")]
 pub struct ClientActorMessage {
-    pub sender: Uuid,
+    pub sender: String,
     pub msg: String,
-    pub recipient: Uuid,
+    pub recipient: String,
     pub messageType: ChatContentType,
 }
-
 
 #[derive(Message, Clone, Debug)]
 #[rtype(result = "()")]
 pub struct OnlineUsers {
-    pub users: HashMap<Uuid, ConnectionInfo>
+    pub users: HashMap<String, ConnectionInfo>
 }
 
 #[derive(Message, Clone, Serialize)]
 #[rtype(result = "()")]
 pub struct ConnectMessage {
-    pub uuid: Uuid,
+    pub id: String,
     pub name: String,
 }
-

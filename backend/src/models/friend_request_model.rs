@@ -1,12 +1,12 @@
-use mongodb::bson::{oid::ObjectId, self};
+use mongodb::bson::{oid::ObjectId, self, doc};
 use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FriendRequest {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     pub id: Option<ObjectId>,
-    pub sender: ObjectId,
-    pub receiver: ObjectId,
+    pub sender: String,
+    pub receiver: String,
     pub accepted: bool,
     pub rejected: bool,
 }
@@ -16,6 +16,18 @@ impl FriendRequest {
     }
     pub fn reject(&mut self) {
         self.accepted = true;
+    }
+}
+impl From<FriendRequest> for bson::Bson {
+    fn from(request: FriendRequest) -> bson::Bson {
+        let doc = doc! {
+            "_id": request.id,
+            "sender": request.sender,
+            "recipient": request.receiver,
+            "accepted": request.accepted,
+            "rejected": request.rejected
+        };
+        bson::Bson::Document(doc)
     }
 }
 
@@ -32,8 +44,8 @@ mod tests {
         let fr_id = ObjectId::new();
         let fr = FriendRequest{
             id: Some(fr_id),
-            sender: ObjectId::new(),
-            receiver: ObjectId::new(),
+            sender: String::new(),
+            receiver: String::new(),
             accepted: false,
             rejected: false
         };
@@ -44,8 +56,8 @@ mod tests {
         let fr_id = ObjectId::new();
         let mut fr = FriendRequest{
             id: Some(fr_id),
-            sender: ObjectId::new(),
-            receiver: ObjectId::new(),
+            sender: String::new(),
+            receiver: String::new(),
             accepted: false,
             rejected: false
         };
@@ -57,8 +69,8 @@ mod tests {
         let fr_id = ObjectId::new();
         let mut fr = FriendRequest{
             id: Some(fr_id),
-            sender: ObjectId::new(),
-            receiver: ObjectId::new(),
+            sender:String::new(),
+            receiver: String::new(),
             accepted: false,
             rejected: false
         };

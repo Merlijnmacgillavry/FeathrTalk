@@ -3,18 +3,19 @@ use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
 pub struct ChatContent {
-    recipient: Uuid,
+    recipient: String,
     content: String,
     messageType: ChatContentType,
 }
 impl ChatContent{
-    pub fn getContent(&self) -> String {
+    pub fn get_content(&self) -> String {
         self.content.to_string()
     }
-    pub fn getRecipient(&self) -> Uuid {
-        self.recipient
+    pub fn get_recipient(&self) -> 
+    String {
+        self.recipient.to_owned()
     }
-    pub fn getMessageType(&self) -> ChatContentType{
+    pub fn get_message_type(&self) -> ChatContentType{
         self.messageType.clone()
     }
 }
@@ -23,4 +24,7 @@ impl ChatContent{
 pub enum ChatContentType {
     Private,
     Group,
+    FriendRequestSend,
+    FriendRequestAccepted,
+    FriendRequestRejected
 }

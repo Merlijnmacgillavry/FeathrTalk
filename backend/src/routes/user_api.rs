@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::{models::user_model::{User, UserNetworkStatus}, repository::mongodb_repo::MongoRepo};
+use crate::{models::user_model::{User}, repository::mongodb_repo::MongoRepo};
 use actix_web::{
     post,
     web::{Data, Json, Path},
@@ -27,10 +27,9 @@ pub async fn create_user(Path(user_id): Path<String>,db: Data<MongoRepo>, new_us
         chats: Vec::<ObjectId>::new(),
         contacts: Vec::<ObjectId>::new(),
         friend_requests: Vec::<ObjectId>::new(),
-        status: UserNetworkStatus::Offline
     };
     println!("{:?}",&new_user);
-    let user_detail = db.create_user(data).await;
+    let user_detail = db.create_user(data);
     match user_detail {
         Ok(user) => HttpResponse::Ok().json(user),
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),

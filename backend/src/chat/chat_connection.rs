@@ -5,20 +5,23 @@ use uuid::Uuid;
 use crate::chat::messages::{ClientActorMessage, Connect};
 use crate::chat::chat_server::ChatServer;
 use crate::chat::text_chat::ChatContent;
+use crate::models::friend_request_model::FriendRequest;
+use crate::models::user_model::UserComplete;
 use crate::utils::client_serializer::ClientUser;
 
 use actix_web_actors::ws::Message::Text;
 
 use super::messages::{ChatMessage, Disconnect, OnlineUsers, ConnectMessage};
+use super::text_chat::ChatContentType;
 
 #[derive(Debug)]
 pub struct ChatConnection {
-    id: Uuid,
+    id: String,
     server_addr: Addr<ChatServer>,
     name: String
 }
 impl ChatConnection {
-    pub fn new(id: Uuid, server_addr: Addr<ChatServer>, name: String) -> ChatConnection{
+    pub fn new(id: String, server_addr: Addr<ChatServer>, name: String) -> ChatConnection{
         ChatConnection { id, server_addr,name }
     }
 }
@@ -42,7 +45,7 @@ impl Actor for ChatConnection {
     }
     fn stopping(&mut self, ctx: &mut Self::Context) -> Running {
         println!("Stopping chat connection:\n\r{:?}", self);
-        self.server_addr.do_send(Disconnect {id: self.id});
+        self.server_addr.do_send(Disconnect {id: self.id.to_owned()});
         let addr = ctx.address();
         let addr2 = addr.clone();
         self.server_addr
@@ -77,15 +80,15 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ChatConnection {
             Ok(ws::Message::Nop) => (),
             Ok(Text(chat_content)) => 
             {
-                println!("Received string {:?}", &chat_content);
+                // println!("Received string {:?}", &chat_content);
                 match serde_json::from_str::<ChatContent>(&chat_content)  {
                     Ok(content) => {
-                        println!("Valid chat message: {:?}", content);
+                        println!("Valid chat message: {:?} \n", content);
                         self.server_addr.do_send(ClientActorMessage{
-                            sender: self.id,
-                            msg: content.getContent(),
-                            recipient: content.getRecipient(),
-                            messageType: content.getMessageType()
+                            sender: self.id.to_owned(),
+                            msg: content.get_content(),
+                            recipient: content.get_recipient(),
+                            messageType: content.get_message_type()
                         })
                     }
                     _ => {
@@ -116,11 +119,30 @@ impl Handler<OnlineUsers> for ChatConnection {
         
     }
 }
+
+impl Handler<UserComplete> for ChatConnection {
+    type Result = ();
+
+    fn handle(&mut self, msg: UserComplete, ctx: &mut Self::Context) {
+        println!("Writing message:\n\r{:?}", msg);
+        ctx.text("USERINFO:".to_owned()+&serde_json::to_string(&msg).unwrap())
+        
+    }
+}
+
 impl Handler<ClientActorMessage> for ChatConnection {
     type Result =();
 
     fn handle(&mut self, msg: ClientActorMessage, ctx: &mut Self::Context){
-        ctx.text("CHATMESSAGE:".to_owned()+&serde_json::to_string(&msg).unwrap())
+        let mut header = "CHATMESSAGE"; 
+        match msg.messageType {
+            ChatContentType::Private => {header = "PRIVATE_CHAT_MESSAGE";}
+            ChatContentType::Group => {header = "GROUP_CHAT_MESSAGE";}
+            ChatContentType::FriendRequestSend => {header = "FRIEND_REQUEST_SEND";}
+            ChatContentType::FriendRequestAccepted => {header = "FRIEND_REQUEST_ACCEPTED";}
+            ChatContentType::FriendRequestRejected => {header = "FRIEND_REQUEST_REJECTED";}
+        }
+        ctx.text(header.to_owned()+"\n"+&serde_json::to_string(&msg).unwrap())
     }
 }
 impl Handler<ConnectMessage> for ChatConnection {

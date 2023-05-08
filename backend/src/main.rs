@@ -27,9 +27,9 @@ async fn default_route(_req: HttpRequest,
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let db = MongoRepo::init().await;
+    let db = MongoRepo::init();
     let db_data = Data::new(db);
-    let chat_server = ChatServer::default().start(); //create and spin up a lobby
+    let chat_server = ChatServer::new().await.start(); //create and spin up a lobby
     println!("{:?}", chat_server);
     HttpServer::new(move || {
         App::new()
