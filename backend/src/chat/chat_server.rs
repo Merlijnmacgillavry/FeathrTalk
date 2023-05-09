@@ -84,10 +84,22 @@ impl ChatServer {
         addr.do_send(user);
     }
     fn accept_friend_request(&self, msg: ClientActorMessage){
-
+        println!("Accepting friend request:  {:?}, to: {:?}", msg.msg, msg.recipient);
+        self.send_message(msg.clone());
+        let accept_result = self.db.accept_friend_request(&msg.msg);
+        match accept_result  {
+            Ok(_) => {
+                self.send_user_info(&msg.sender);
+                self.send_user_info(&msg.recipient);
+            }
+            Err(e)=>{
+                println!("{:?}", e);
+            }
+        }
     }
 
     fn send_friend_request(&self, msg: ClientActorMessage){
+        let mut msg = msg;
         let client_online = &self.clients.contains_key(&msg.recipient);
         println!("checking if client is online {:?}", client_online);
         println!("Sending friend request {:?}, to: {:?}", msg.msg, msg.recipient);
@@ -109,6 +121,7 @@ impl ChatServer {
         match res {
             Ok(fr) => {
                 println!("{:?}", fr);
+                msg.msg = fr.inserted_id.to_string();
             }
             Err(_) =>{
                 println!("could not save fr in db");
@@ -141,7 +154,7 @@ impl Handler<ClientActorMessage> for ChatServer {
     
                 }
                 ChatContentType::FriendRequestAccepted => {
-                    self.send_friend_request(msg);
+                    self.accept_friend_request(msg);
     
                 }
                 ChatContentType::FriendRequestRejected => {

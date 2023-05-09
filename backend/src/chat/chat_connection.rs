@@ -7,6 +7,7 @@ use crate::chat::chat_server::ChatServer;
 use crate::chat::text_chat::ChatContent;
 use crate::models::friend_request_model::FriendRequest;
 use crate::models::user_model::UserComplete;
+use crate::repository::mongodb_repo::MongoRepo;
 use crate::utils::client_serializer::ClientUser;
 
 use actix_web_actors::ws::Message::Text;
@@ -18,11 +19,13 @@ use super::text_chat::ChatContentType;
 pub struct ChatConnection {
     id: String,
     server_addr: Addr<ChatServer>,
-    name: String
+    name: String,
+    db: MongoRepo
 }
 impl ChatConnection {
     pub fn new(id: String, server_addr: Addr<ChatServer>, name: String) -> ChatConnection{
-        ChatConnection { id, server_addr,name }
+        let db = MongoRepo::init();
+        ChatConnection { id, server_addr,name, db }
     }
 }
 
@@ -107,14 +110,29 @@ impl Handler<OnlineUsers> for ChatConnection {
 
     fn handle(&mut self, msg: OnlineUsers, ctx: &mut Self::Context) {
         println!("Writing message:\n\r{:?}", msg);
-        let mut user_list = Vec::<ClientUser>::new();
-        for (uuid, info) in msg.users{
-            let user = ClientUser{
-                uuid: uuid.to_string(),
-                name: info.name
-            };
-            user_list.push(user);
+        println!("{:?}",self.id);
+        let user_result = self.db.find_user(&self.id.to_string());
+        let mut contacts_list = Vec::<String>::new();
+        match user_result {
+            Ok(user) => {
+                let contacts = user.contacts;
+                    for contact in contacts.iter(){
+                        contacts_list.push(contact.to_string());
+                }
+            }
+            Err(_) => todo!(),
         }
+        let mut user_list = Vec::<ClientUser>::new();
+        for (id, info) in msg.users{
+            if contacts_list.contains(&id){
+                let user = ClientUser{
+                    id: id.to_string(),
+                    name: info.name
+                };
+                user_list.push(user);
+            }
+            
+        } 
         ctx.text("ONLINEUSERS:".to_owned()+&serde_json::to_string(&user_list).unwrap())
         
     }
