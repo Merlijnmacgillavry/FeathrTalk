@@ -4,6 +4,7 @@ import 'dart:core';
 import 'package:feathrtalk_frontend/providers/auth_provider.dart';
 import 'package:feathrtalk_frontend/providers/chat_provider.dart';
 import 'package:feathrtalk_frontend/providers/notification_provider.dart';
+import 'package:feathrtalk_frontend/providers/websocket_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
@@ -14,9 +15,13 @@ import 'pages/welcome_page.dart';
 
 void main() async {
   runApp(MultiProvider(providers: [
-    ChangeNotifierProvider(create: (_) => ChatProvider()),
-    ChangeNotifierProvider(create: (_) => AuthProvider()),
-    ChangeNotifierProvider(create: (_) => NotificationProvider())
+    ChangeNotifierProvider(create: (context) => ChatProvider()),
+    ChangeNotifierProvider(create: (context) => AuthProvider()),
+    ChangeNotifierProvider(create: (_) => NotificationProvider()),
+    ChangeNotifierProxyProvider<AuthProvider, WebsocketProvider>(
+      update: (context, auth, websocket) => WebsocketProvider(auth),
+      create: (BuildContext context) => WebsocketProvider(AuthProvider()),
+    ),
   ], child: ChatApp()));
 }
 

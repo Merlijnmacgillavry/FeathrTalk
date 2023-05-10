@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:feathrtalk_frontend/pages/onboarding.dart';
 import 'package:feathrtalk_frontend/providers/auth_provider.dart';
 import 'package:feathrtalk_frontend/providers/notification_provider.dart';
@@ -5,6 +7,7 @@ import 'package:feathrtalk_frontend/widgets/notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/websocket_provider.dart';
 import 'chats.dart';
 
 class LoginPage extends StatefulWidget {
@@ -16,12 +19,14 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _passwordVisible = false;
+
   void _onLoginButtonPressed(BuildContext context) async {
     UserCredentials credentials =
         UserCredentials(_emailController.text, _passwordController.text);
     context.read<AuthProvider>().login(credentials).then((value) {
+      context.read<WebsocketProvider>().connectToWebSocket(value.id);
       context.read<NotificationProvider>().alert(
-          "Successfully logged in! With accessToken: ${value.accessToken} and refreshToken${value.refreshToken}");
+          "Successfully logged in! With accessToken: ${value.tokens.accessToken} and refreshToken${value.tokens.refreshToken} and id${value.id} ");
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => Onboarding()),

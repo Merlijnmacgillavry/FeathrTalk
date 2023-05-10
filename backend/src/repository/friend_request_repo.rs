@@ -4,7 +4,7 @@ use std::{str::FromStr, error::Error as stdError};
 use futures::Future;
 use mongodb::{results::{InsertOneResult, UpdateResult}, bson::{extjson::de::Error, doc, Bson, oid::ObjectId}};
 
-use crate::models::{user_model::{User}, friend_request_model::FriendRequest};
+use crate::models::{user_model::{User, UserPublic}, friend_request_model::FriendRequest};
 
 use super::mongodb_repo::MongoRepo;
 
@@ -27,6 +27,7 @@ impl MongoRepo {
         // let add_to_user = self.users.update_one(query, update, options)
         Ok(friend_request)
     }
+
     pub fn get_friend_requests_of_user(&self, user: User) -> Result<Vec<FriendRequest>, Error> {
         let mut frs = Vec::<FriendRequest>::new();
         for friend_request_id in user.friend_requests.iter() {

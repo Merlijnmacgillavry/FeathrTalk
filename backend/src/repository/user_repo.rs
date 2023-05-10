@@ -3,7 +3,7 @@ use core::fmt;
 use std::{str::FromStr, fmt::format, error::Error as stdError};
 
 use mongodb::{error::Error, results::{InsertOneResult, UpdateResult}, bson::{doc,  oid::ObjectId, Document, self}};
-use crate::models::user_model::{User, UserComplete};
+use crate::models::user_model::{User, UserComplete, UserPublic};
 
 use super::mongodb_repo::MongoRepo;
 
@@ -31,7 +31,8 @@ impl MongoRepo {
         match user {
             Ok(u)=>{
                 let friend_requests = self.get_friend_requests_of_user(u.clone()).unwrap();
-                Ok(u.complete(friend_requests))
+                let contacts = self.get_contacts_of_user(u.clone()).unwrap();
+                Ok(u.to_complete(friend_requests, contacts))
             }
             Err(e)=>{
                 Err(e)
@@ -39,6 +40,31 @@ impl MongoRepo {
         }
 
     }
+
+    pub fn get_contacts_of_user(&self, user: User) -> Result<Vec<UserPublic>, Error> {
+        let mut contacts = Vec::<UserPublic>::new();
+        for contact_id in user.contacts.iter() {
+            let filter = doc! {"_id": contact_id};
+            let contact = self.users.find_one(Some(filter), None);
+            match contact {
+                Ok(fr) => {
+                    match fr{
+                        Some(f) => {
+                            contacts.push(f.to_public() );
+                        }
+                        None => {
+                            println!("Request not found by id {:?}", fr);
+                        }
+                    }
+                }
+                Err(e) => {
+                    print!("{:?}",e);
+                }
+            }
+        }
+        Ok(contacts)
+    }
+       
 
     pub fn find_user(&self, id: &String) -> Result<User, UserNotFoundError>{
         println!("{}", id);

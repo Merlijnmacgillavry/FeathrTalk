@@ -5,6 +5,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'home.dart';
+
 class Onboarding extends StatefulWidget {
   const Onboarding({Key? key}) : super(key: key);
 
@@ -37,7 +39,8 @@ class _OnboardingState extends State<Onboarding> {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => ChatsPage(name: _nameController.text)),
+        builder: (context) => HomePage(),
+      ),
     );
   }
 
@@ -55,17 +58,17 @@ class _OnboardingState extends State<Onboarding> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  CircleAvatar(
-                      radius: 100,
-                      // child: ClipOval(
-                      // backgroundImage: NetworkImage(profilePicture),
-                      child: SizedBox(
-                          width: 200,
-                          height: 200,
-                          child: ClipOval(child: Image.network(profilePicture)))
+                  // CircleAvatar(
+                  // radius: 100,
+                  // // child: ClipOval(
+                  // // backgroundImage: NetworkImage(profilePicture),
+                  // child: SizedBox(
+                  //     width: 200,
+                  //     height: 200,
+                  //     child: ClipOval(child: Image.network(profilePicture)))
 
-                      // ),
-                      ),
+                  // // ),
+                  // ),
                   // width: 100,
                   // child: Container(
                   //   decoration: BoxDecoration(

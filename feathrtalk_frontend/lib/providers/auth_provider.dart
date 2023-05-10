@@ -9,24 +9,43 @@ class AuthProvider extends ChangeNotifier {
   final HttpService _httpService = HttpService();
   late UserCredentials _credentials;
   late UserTokens _tokens = UserTokens();
+  late String _id = "";
 
   bool get loggedIn => _tokens.isValidAT;
 
   bool get refreshValid => _tokens.isValidRT;
 
+  String get id => _id;
+
+  UserTokens get tokens => _tokens;
+
   UserCredentials get credentials => _credentials;
 
-  Future<UserTokens> login(UserCredentials uc) async {
+  Future<LoginData> login(UserCredentials uc) async {
     Map<String, dynamic> body = {"email": uc.email, "password": uc.hash};
     try {
       Map response = await _httpService.login(body);
-      _tokens = UserTokens.fromJson(response);
+      UserTokens _tokens = UserTokens.fromJson(response);
+      String _id = response['id'];
       _credentials = uc;
-      return _tokens;
+      return LoginData(_tokens, _id);
     } catch (e) {
       rethrow;
     }
   }
+}
+
+class LoginData {
+  late UserTokens _tokens;
+  late String _id;
+
+  LoginData(UserTokens tokens, String id) {
+    _tokens = tokens;
+    _id = id;
+  }
+
+  UserTokens get tokens => _tokens;
+  String get id => _id;
 }
 
 class UserTokens {
@@ -39,8 +58,8 @@ class UserTokens {
   }
 
   UserTokens.fromJson(Map json) {
-    this.accessToken = json['accessToken'];
-    this.refreshToken = json['refreshToken'];
+    accessToken = json['accessToken'];
+    refreshToken = json['refreshToken'];
   }
 
   bool get isValidAT {
@@ -84,7 +103,6 @@ class UserCredentials {
   late String password;
 
   UserCredentials(String email, String password) {
-    print(email);
     this.email = email;
     this.password = password;
   }
@@ -97,7 +115,7 @@ class UserCredentials {
 
     // Convert the hash bytes to a hexadecimal string
     String hashedPassword = digest.toString();
-    print(hashedPassword);
+
     return hashedPassword;
   }
 }
