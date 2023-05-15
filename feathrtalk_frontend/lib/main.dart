@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:core';
 
+import 'package:feathrtalk_frontend/pages/entry.dart';
 import 'package:feathrtalk_frontend/providers/auth_provider.dart';
 import 'package:feathrtalk_frontend/providers/chat_provider.dart';
 import 'package:feathrtalk_frontend/providers/notification_provider.dart';
@@ -15,7 +16,7 @@ import 'pages/welcome_page.dart';
 
 void main() async {
   runApp(MultiProvider(providers: [
-    ChangeNotifierProvider(create: (context) => ChatProvider()),
+    // ChangeNotifierProvider(create: (context) => ChatProvider()),
     ChangeNotifierProvider(create: (context) => AuthProvider()),
     ChangeNotifierProvider(create: (_) => NotificationProvider()),
     ChangeNotifierProxyProvider<AuthProvider, WebsocketProvider>(
@@ -29,26 +30,27 @@ class ChatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Chat App',
+      debugShowCheckedModeBanner: false,
+      title: 'FeathrTalk',
       home: MediaQuery(
         data: const MediaQueryData(),
         child: Stack(
           children: [
-            Container(
-              decoration: const BoxDecoration(
-                color: Colors.transparent,
-                image: DecorationImage(
-                  repeat: ImageRepeat.repeat,
-                  image: AssetImage(
-                    'lib/assets/webb-dark.png',
-                  ),
-                ),
-              ),
-              height: double.infinity,
-              width: double.infinity,
-              alignment: Alignment.center,
-            ),
-            WelcomePage()
+            // Container(
+            //   decoration: const BoxDecoration(
+            //     color: Colors.transparent,
+            //     image: DecorationImage(
+            //       repeat: ImageRepeat.repeat,
+            //       image: AssetImage(
+            //         'lib/assets/webb-dark.png',
+            //       ),
+            //     ),
+            //   ),
+            //   height: double.infinity,
+            //   width: double.infinity,
+            //   alignment: Alignment.center,
+            // ),
+            Entry()
           ],
         ),
       ),

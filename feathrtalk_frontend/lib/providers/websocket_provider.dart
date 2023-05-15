@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:feathrtalk_frontend/providers/auth_provider.dart';
 import 'package:feathrtalk_frontend/services/shared_preferences.dart';
@@ -7,34 +8,43 @@ import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-import '../pages/chats.dart';
-
 class WebsocketProvider with ChangeNotifier {
   WebSocketChannel? _channel;
+  bool isConnected = false;
   final AuthProvider _authProvider;
-  List<OnlineUser> _onlineUsers = [];
+  List<OnlineUser> onlineUsers = [];
   UserDataService userDataService = UserDataService();
   WebsocketProvider(this._authProvider) {
     _authProvider;
     loadUserData().then((data) {
       if (data != null) {
-        print('we have data');
-        print({data.contacts});
         userDataService = data;
       }
       notifyListeners();
     });
   }
 
-  void connectToWebSocket(String id) {
-    String url = 'ws://192.168.0.101:3000/api/FeathrTalk/chat/$id';
-    Map<String, dynamic> headers = {
-      'Authorization': _authProvider.tokens.accessToken
-    };
-    _channel = IOWebSocketChannel.connect(Uri.parse(url), headers: headers);
-    _channel?.stream.listen((data) {
-      _handleMessage(data);
-    });
+  void connectToWebSocket() {
+    if (!isConnected) {
+      String id = _authProvider.id;
+      String url = 'ws://192.168.0.101:3000/api/FeathrTalk/chat/$id';
+      Map<String, dynamic> headers = {
+        'Authorization': _authProvider.tokens.accessToken
+      };
+      try {
+        print(headers);
+        _channel = IOWebSocketChannel.connect(Uri.parse(url), headers: headers);
+        isConnected = true;
+        _channel?.stream.listen((data) {
+          _handleMessage(data);
+        });
+      } catch (e) {
+        log("websocket error: ");
+        log(e.toString());
+      }
+    } else {
+      print("websocket already connected");
+    }
   }
 
   @override
@@ -49,7 +59,7 @@ class WebsocketProvider with ChangeNotifier {
   }
 
   void _handleMessage(String message) {
-    // print(message);
+    print(message);
     List<String> splitM = _splitMessage(message);
     if (splitM.length >= 2) {
       String type = splitM[0];
@@ -115,10 +125,10 @@ class WebsocketProvider with ChangeNotifier {
   }
 
   void handleOnlineUsers(String data) {
-    _onlineUsers.clear();
+    onlineUsers.clear();
     List<dynamic> onlineUserData = jsonDecode(data);
     for (var user in onlineUserData) {
-      _onlineUsers.add(OnlineUser(uuid: user['id'], name: user['name']));
+      onlineUsers.add(OnlineUser(uuid: user['id'], name: user['name']));
       notifyListeners();
     }
   }

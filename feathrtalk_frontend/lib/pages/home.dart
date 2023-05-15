@@ -1,6 +1,9 @@
-import 'package:feathrtalk_frontend/pages/chats.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import '../tabs/chats.dart';
+import '../tabs/contacts.dart';
+import '../tabs/group_chats.dart';
 
 class HomePage extends StatelessWidget {
   final _groupsKey = GlobalKey<NavigatorState>();
@@ -13,27 +16,31 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    return PersistentBottomBarScaffold(
-      items: [
-        PersistentTabItem(
-          tab: const ChatsPage(),
-          icon: Icons.group,
-          title: 'Groups',
-          navigatorkey: _groupsKey,
-        ),
-        PersistentTabItem(
-          tab: const ChatsPage(),
-          icon: Icons.chat,
-          title: 'Chats',
-          navigatorkey: _chatsKey,
-        ),
-        // PersistentTabItem(
-        //   tab: const TabPage3(),
-        //   icon: Icons.person,
-        //   title: 'Profile',
-        //   navigatorkey: _tab3navigatorKey,
-        // ),
-      ],
+
+    return new WillPopScope(
+      onWillPop: () async => false,
+      child: PersistentBottomBarScaffold(
+        items: [
+          PersistentTabItem(
+            tab: const GroupChats(),
+            icon: Icons.group,
+            title: 'Groups',
+            navigatorkey: _groupsKey,
+          ),
+          PersistentTabItem(
+            tab: const Chats(),
+            icon: Icons.chat,
+            title: 'Chats',
+            navigatorkey: _chatsKey,
+          ),
+          PersistentTabItem(
+            tab: const Contacts(),
+            icon: Icons.contacts,
+            title: 'Contacts',
+            navigatorkey: _contactsKey,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -66,6 +73,32 @@ class PersistentBottomBarScaffold extends StatefulWidget {
 class _PersistentBottomBarScaffoldState
     extends State<PersistentBottomBarScaffold> {
   int _selectedTab = 0;
+  bool _updatingTab = false;
+  void nextTab() {
+    if (!_updatingTab) {
+      _updatingTab = true;
+      setState(() {
+        if (_selectedTab + 1 == widget.items.length) {
+          _selectedTab = 0;
+        } else {
+          _selectedTab++;
+        }
+      });
+    }
+  }
+
+  void previousTab() {
+    if (!_updatingTab) {
+      _updatingTab = true;
+      setState(() {
+        if (_selectedTab == 0) {
+          _selectedTab = widget.items.length - 1;
+        } else {
+          _selectedTab--;
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,24 +117,44 @@ class _PersistentBottomBarScaffoldState
       child: Scaffold(
         /// Using indexedStack to maintain the order of the tabs and the state of the
         /// previously opened tab
-        body: IndexedStack(
-          index: _selectedTab,
-          children: widget.items
-              .map((page) => Navigator(
-                    /// Each tab is wrapped in a Navigator so that naigation in
-                    /// one tab can be independent of the other tabs
-                    key: page.navigatorkey,
-                    onGenerateInitialRoutes: (navigator, initialRoute) {
-                      return [
-                        MaterialPageRoute(builder: (context) => page.tab)
-                      ];
-                    },
-                  ))
-              .toList(),
-        ),
+        body: SizedBox.expand(
+          child: GestureDetector(
+            onHorizontalDragUpdate: (details) {
+              // print(details.delta.direction)
 
-        /// Define the persistent bottom bar
+              // Swiping in left direction.
+              if (details.delta.dx < -10) {
+                nextTab();
+              }
+              if (details.delta.dx > 10) {
+                previousTab();
+              }
+            },
+            onHorizontalDragEnd: (details) => {_updatingTab = false},
+            // onPanUpdate: (details) {
+            //   // Swiping in right direction.
+            // },
+            child: IndexedStack(
+              index: _selectedTab,
+              children: widget.items
+                  .map((page) => Navigator(
+                        /// Each tab is wrapped in a Navigator so that naigation in
+                        /// one tab can be independent of the other tabs
+                        key: page.navigatorkey,
+                        onGenerateInitialRoutes: (navigator, initialRoute) {
+                          return [
+                            MaterialPageRoute(builder: (context) => page.tab)
+                          ];
+                        },
+                      ))
+                  .toList(),
+
+              /// Define the persistent bottom bar
+            ),
+          ),
+        ),
         bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: Color(0xff1A1B1E),
           currentIndex: _selectedTab,
           onTap: (index) {
             setState(() {
@@ -110,7 +163,21 @@ class _PersistentBottomBarScaffoldState
           },
           items: widget.items
               .map((item) => BottomNavigationBarItem(
-                  icon: Icon(item.icon), label: item.title))
+                  icon: Icon(item.icon),
+                  activeIcon: ShaderMask(
+                    shaderCallback: (Rect bounds) => LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Color(0xff47C8FF),
+                        Color(0xff9747FF),
+                      ],
+                    ).createShader(bounds),
+                    child: Icon(
+                      item.icon,
+                    ),
+                  ),
+                  label: item.title))
               .toList(),
         ),
       ),

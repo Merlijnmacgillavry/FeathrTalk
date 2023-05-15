@@ -74,3 +74,5 @@ pub struct UserPublic {
     // pub friend_requests: Vec<FriendRequest>,
     // pub blocks: Vec<ObjectId>,
 }
+
+

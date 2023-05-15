@@ -3,8 +3,8 @@ use std::str::FromStr;
 use crate::{models::user_model::{User}, repository::mongodb_repo::MongoRepo};
 use actix_web::{
     post,
-    web::{Data, Json, Path},
-    HttpResponse, HttpRequest,
+    web::{Data, Json, Path, get},
+    HttpResponse, HttpRequest, get,
 };
 use mongodb::bson::oid::ObjectId;
 use serde::{Serialize, Deserialize};
@@ -28,10 +28,19 @@ pub async fn create_user(Path(user_id): Path<String>,db: Data<MongoRepo>, new_us
         contacts: Vec::<ObjectId>::new(),
         friend_requests: Vec::<ObjectId>::new(),
     };
-    println!("{:?}",&new_user);
+    // println!("{:?}",&new_user);
     let user_detail = db.create_user(data);
     match user_detail {
         Ok(user) => HttpResponse::Ok().json(user),
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
+    }
+}
+
+#[get("/search_user/{user_code}")]
+pub async fn search_user(Path(user_code): Path<String>,db: Data<MongoRepo>) -> HttpResponse {
+    let users = db.search_user(&user_code);
+    match users {
+        Ok(user) => HttpResponse::Ok().json(user),
+        Err(err) => HttpResponse::BadRequest().body(err.to_string()),
     }
 }

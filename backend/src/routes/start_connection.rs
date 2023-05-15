@@ -25,7 +25,6 @@ pub async fn connect_user(
     srv: Data<Addr<ChatServer>>,
 ) -> Result<HttpResponse, Error> {
     // let user_id = Uuid::new_v4();
-
     // println!("{user_name}");
     let user = db.find_user(&user_id);
     match user{

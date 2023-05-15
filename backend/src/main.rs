@@ -18,6 +18,8 @@ use chat::{
 use routes::start_connection::connect_user as start_connection_route;
 use routes::start_connection::health_check as health_check_route;
 
+use crate::routes::user_api::search_user;
+
 async fn default_route(_req: HttpRequest, 
     _stream: Payload) ->  HttpResponse {
         let requested_url = _req.uri().to_string();
@@ -38,6 +40,7 @@ async fn main() -> std::io::Result<()> {
             .default_service(web::route().to(default_route))
             // .service(start_user_connection)
             .service(create_user)
+            .service(search_user)
             .app_data(db_data.clone())
             .data(chat_server.clone()) //register the lobby
     })

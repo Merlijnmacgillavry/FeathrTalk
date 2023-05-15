@@ -33,7 +33,7 @@ pub struct ConnectionInfo {
 
 impl ChatServer {
     fn send_message_to_recipient(&self, msg: ClientActorMessage) -> Result<(), SendError<ClientActorMessage>>{
-        println!("Sending message to recipient: {:?}", &msg.recipient);
+        // println!("Sending message to recipient: {:?}", &msg.recipient);
         self.clients
             .get(&msg.recipient)
             .unwrap()
@@ -41,7 +41,7 @@ impl ChatServer {
             .do_send(msg)
     }
     fn send_message_confimation_to_sender(&self, msg: ClientActorMessage) -> Result<(), SendError<ClientActorMessage>>{
-        println!("Sending message to sender: {:?}", &msg.sender);
+        // println!("Sending message to sender: {:?}", &msg.sender);
         self.clients.get(&msg.sender)
                 .unwrap()
                 .socket
@@ -70,11 +70,11 @@ impl ChatServer {
         }
     }    
     fn send_chat_message(&self, msg: ClientActorMessage){
-        println!("Sending message {:?}, to: {:?}", msg.msg, msg.recipient);
+        // println!("Sending message {:?}, to: {:?}", msg.msg, msg.recipient);
         self.send_message(msg);
     }
     fn send_group_message(&self, msg: ClientActorMessage){
-        println!("Sending message {:?}, to: {:?}", msg.msg, msg.recipient);
+        // println!("Sending message {:?}, to: {:?}", msg.msg, msg.recipient);
         self.send_message(msg);
     }
 

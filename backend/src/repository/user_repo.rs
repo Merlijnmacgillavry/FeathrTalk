@@ -2,7 +2,7 @@
 use core::fmt;
 use std::{str::FromStr, fmt::format, error::Error as stdError};
 
-use mongodb::{error::Error, results::{InsertOneResult, UpdateResult}, bson::{doc,  oid::ObjectId, Document, self}};
+use mongodb::{error::{Error, ErrorKind}, results::{InsertOneResult, UpdateResult}, bson::{doc,  oid::ObjectId, Document, self, Bson}};
 use crate::models::user_model::{User, UserComplete, UserPublic};
 
 use super::mongodb_repo::MongoRepo;
@@ -11,17 +11,17 @@ use super::mongodb_repo::MongoRepo;
 impl MongoRepo {
     pub fn create_user(&self, new_user: User) -> Result<InsertOneResult, Error> {
         let new_doc = new_user;
-        println!("{:?}", new_doc);
+        // println!("{:?}", new_doc);
         let user = self
             .users
             .insert_one(new_doc, None);
         match user {
             Ok(u) => {
-                println!("{:?}", u);
+                // println!("{:?}", u);
                 Ok(u)
             }
             Err(e) => {
-                println!("{:?}", e);
+                // println!("{:?}", e);
                 Err(e)
             }
         }
@@ -64,10 +64,46 @@ impl MongoRepo {
         }
         Ok(contacts)
     }
-       
+    pub fn search_user(&self, query: &String) -> Result<Vec<UserPublic>, Error> {
+        let parts: Vec<&str> = query.split("-").collect();
+        let mut result = Vec::new();
+        if parts.len()!=2 {
+            let user = self.find_user(query);
+            match user {
+                Ok(u)=>  {
+                    result.push(u.to_public());
+                    return Ok(result)
+                }
+                Err(e) => ()
+            }
+            // return Err(Error::custom("Invalid Usercode."));
+        }else{
+            let name = parts[0];
+            let code = parts[1];
+            // let name = format!("/^{}", name);
+            let filter = doc! {"name": name};
+            let cursor = self.users.find(filter, None)?;
+            
+            for doc in cursor {
+                match doc {
+                    Ok(u)=>{
+                        println!("{:?}",&u.id);
+                        let id = u.id.unwrap();
+                        if id.to_string().starts_with(code){
+                            result.push(u.to_public());
+                        }
+                    }
+                    Err(e) => println!("{:?}",e)
+                };
+                // let user: User = bson::from_bson(Bson::Document(doc))?;
+                
+            }
+            
+        }
+        Ok(result)
+    }
 
     pub fn find_user(&self, id: &String) -> Result<User, UserNotFoundError>{
-        println!("{}", id);
         let id = ObjectId::from_str(id);
         match &id {
             Ok(i) => {
