@@ -82,7 +82,7 @@ class AuthProvider extends ChangeNotifier {
   Future<LoginData> addUser(PublicUser publicUser, UserCredentials uc) async {
     Map<String, dynamic> body = {
       "name": publicUser.name,
-      "profile_image": publicUser.profileImage,
+      "profile_image": publicUser.profile_image,
       "bio": publicUser.bio
     };
     String id = _id;

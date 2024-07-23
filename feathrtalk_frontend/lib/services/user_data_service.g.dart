@@ -35,7 +35,7 @@ PublicUser _$PublicUserFromJson(Map<String, dynamic> json) => PublicUser(
       id: json['id'] as String,
       name: json['name'] as String,
       bio: json['bio'] as String,
-      profileImage: json['profileImage'] as String,
+      profile_image: json['profile_image'] as String,
     );
 
 Map<String, dynamic> _$PublicUserToJson(PublicUser instance) =>
@@ -43,7 +43,7 @@ Map<String, dynamic> _$PublicUserToJson(PublicUser instance) =>
       'id': instance.id,
       'name': instance.name,
       'bio': instance.bio,
-      'profileImage': instance.profileImage,
+      'profile_image': instance.profile_image,
     };
 
 FriendRequest _$FriendRequestFromJson(Map<String, dynamic> json) =>

@@ -28,15 +28,14 @@ class HttpService {
   // }
 
   Future<List<dynamic>> findUser(String code, String token) async {
-    print(code);
     final response = await http.get(
         Uri.parse('http://$baseUrl/api/FeathrTalk/search_user/$code'),
         headers: {'Content-Type': 'application/json', 'Authorization': token});
     if (response.statusCode == 200) {
-      print(json.decode(json.encode(response.body)));
-      return json.decode(response.body);
+      String body = response.body;
+      print(body);
+      return json.decode(body);
     } else {
-      print(json.decode(json.encode(response.body)));
       throw Exception('Failed to fetch data');
     }
   }

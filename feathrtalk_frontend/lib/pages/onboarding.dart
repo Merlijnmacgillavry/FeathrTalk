@@ -221,7 +221,7 @@ class _OnboardingState extends State<Onboarding> {
                                   id: "",
                                   name: _name,
                                   bio: _bio,
-                                  profileImage: "x");
+                                  profile_image: "x");
                               // _onLoginButtonPressed(uc);
                               _saveProfile(publicUser, uc);
                             }

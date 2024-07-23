@@ -75,6 +75,11 @@ class WebsocketProvider with ChangeNotifier {
             handleUserInfo(data);
           }
           break;
+        case "FriendRequestSend":
+          {
+            handleFriendRequest(data);
+          }
+          break;
         case "CHATMESSAGE":
           {
             // final messageData = json.decode(data);

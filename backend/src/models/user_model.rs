@@ -37,11 +37,21 @@ impl User{
 
     }
     pub fn to_public(&self) -> UserPublic{
-        UserPublic { id: self.id.to_owned(), 
+        let mut id= String::new();
+        match self.id {
+            Some(i) =>{
+                id = i.to_string();
+            }
+            None => {
+                println!("id does not exist");
+            }
+        }
+        UserPublic { id: id, 
             name: self.name.to_owned(), 
             bio: self.bio.to_owned(), 
             profile_image: self.profile_image.to_owned(), 
          }
+        
 
     } 
 }
@@ -63,8 +73,7 @@ pub struct UserComplete {
 #[derive(Debug, Serialize, Deserialize, Message)]
 #[rtype(result = "()")]
 pub struct UserPublic {
-    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<ObjectId>,
+    pub id: String,
     pub name: String,
     pub bio: String,
     pub profile_image: String,

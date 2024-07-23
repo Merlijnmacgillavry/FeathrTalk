@@ -34,7 +34,7 @@ class UserDataService {
           id: contactData['_id'][r'$oid'],
           name: contactData['name'],
           bio: contactData['bio'],
-          profileImage: contactData['profile_image']);
+          profile_image: contactData['profile_image']);
       contacts[contact.id] = contact;
     }
     for (var friendRequestData in rawUserData['friend_requests']) {
@@ -60,7 +60,7 @@ class PublicUser {
   late String id;
   late String name;
   late String bio;
-  late String profileImage;
+  late String profile_image;
 
   factory PublicUser.fromJson(Map<String, dynamic> json) =>
       _$PublicUserFromJson(json);
@@ -71,7 +71,7 @@ class PublicUser {
       {required this.id,
       required this.name,
       required this.bio,
-      required this.profileImage});
+      required this.profile_image});
 }
 
 @JsonSerializable()

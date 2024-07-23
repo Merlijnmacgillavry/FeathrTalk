@@ -15,37 +15,18 @@ import '../models/user_credentials.dart';
 import '../providers/websocket_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../services/user_data_service.dart';
+
 class AddContactPage extends StatefulWidget {
   @override
   _AddContactState createState() => _AddContactState();
 }
 
 class _AddContactState extends State<AddContactPage> {
+  final httpService = HttpService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _passwordVisible = false;
-
-  void _onLoginButtonPressed(UserCredentials credentials) async {
-    context.read<AuthProvider>().login(credentials).then((value) {
-      context.read<WebsocketProvider>().connectToWebSocket();
-      context.read<NotificationProvider>().alert(
-          "Successfully logged in! With accessToken: ${value.tokens.accessToken} and refreshToken${value.tokens.refreshToken} and id${value.id} ");
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
-    }).catchError((e) {
-      _emailController.clear();
-      _passwordController.clear();
-      context.read<NotificationProvider>().alert(e.toString());
-    });
-  }
-
-  void _togglePasswordVisibility() {
-    setState(() {
-      _passwordVisible = !_passwordVisible;
-    });
-  }
 
   @override
   void dispose() {
@@ -75,6 +56,40 @@ class _AddContactState extends State<AddContactPage> {
     AuthProvider _authProvider = context.read<AuthProvider>();
     WebsocketProvider _websocketProvider = context.read<WebsocketProvider>();
     HttpService _httpService = HttpService();
+
+    void _onAddContactButtonPressed(code, tokens) async {
+      httpService.findUser(code, tokens).then((users) {
+        Map<String, dynamic> rawUser = users[0];
+        PublicUser user = PublicUser.fromJson(rawUser);
+        print(user);
+        // PublicUser u = PublicUser.fromJson(users[0]);
+        // print(u.n)
+      });
+      //   context.read<NotificationProvider>().alert(
+      //     "Found User!" + ;
+      //   );
+      //   context.read<WebsocketProvider>().sendFriendRequest()
+      // });
+      // context.read<AuthProvider>().login(credentials).then((value) {
+      //   context.read<WebsocketProvider>().connectToWebSocket();
+      //   context.read<NotificationProvider>().alert(
+      //       "Successfully logged in! With accessToken: ${value.tokens.accessToken} and refreshToken${value.tokens.refreshToken} and id${value.id} ");
+      //   Navigator.push(
+      //     context,
+      //     MaterialPageRoute(builder: (context) => HomePage()),
+      //   );
+      // }).catchError((e) {
+      //   _emailController.clear();
+      //   _passwordController.clear();
+      //   context.read<NotificationProvider>().alert(e.toString());
+      // });
+    }
+
+    void _togglePasswordVisibility() {
+      setState(() {
+        _passwordVisible = !_passwordVisible;
+      });
+    }
 
     String _code = "";
 
@@ -147,7 +162,7 @@ class _AddContactState extends State<AddContactPage> {
                       onEditingComplete: () {
                         if (_formKey.currentState?.validate() ?? false) {
                           /// do something
-                          _httpService.findUser(
+                          _onAddContactButtonPressed(
                               _code, _authProvider.tokens.accessToken);
                         }
                       },
